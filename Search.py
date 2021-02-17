@@ -11,20 +11,12 @@ searchfile = open('search.pkl', 'wb')
 page = 0
 bookmarks = []
 count = 0
-if limit:
-  while (items:=Raindrop.search(api, page=page, collection=CollectionRef({"$id": 0}), word=searchterm, perpage=50, tag=searchtag)) and page < 19:
-    bookmarks = bookmarks + items
+try:
+  while (True):
+    bookmarks = bookmarks + Raindrop.search(api, page=page, collection=CollectionRef({"$id": 0}), word=searchterm, perpage=50, tag=searchtag)
     print("Added bookmarks from page " + str(page))
     page += 1
-else:
-    while (items:=Raindrop.search(api, page=page, collection=CollectionRef({"$id": 0}), perpage=50)):
-      for item in items:
-        if searchterm in item.link and searchtag in item.tags:
-          bookmarks.append(item)
-          count += 1
-          print("Bookmark #" + str(count) + " added. URL: " + item.link + ". Title: " + item.title + ". Tags: " + str(item.tags)) 
-        print("Added bookmarks from page " + str(page))
-        page += 1
-pickle.dump(bookmarks, searchfile, pickle.HIGHEST_PROTOCOL)
-print("Created data file.")
-searchfile.close()
+except:
+  pickle.dump(bookmarks, searchfile, pickle.HIGHEST_PROTOCOL)
+  print("Created data file.")
+  searchfile.close()
