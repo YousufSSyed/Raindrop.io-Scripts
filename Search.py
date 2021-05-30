@@ -3,20 +3,24 @@ from rdfunctions import *
 import time, sys, os, pickle
 api = API('e4588190-ab7d-43d3-b488-3716aac0272d')
 
-searchterm = "reddit.com"
+# Both values are strings
+searchterm = ""
 searchtag = "Miscellaneous Reads"
-limit = True
 
+newbookmarks = Raindrop.search(api, page=0, tag=searchtag, collection=CollectionRef({"$id": 0}), word=searchterm, perpage=50)
 searchfile = open('search.pkl', 'wb')
-page = 0
 bookmarks = []
-count = 0
-try:
-  while (True):
-    bookmarks = bookmarks + Raindrop.search(api, page=page, collection=CollectionRef({"$id": 0}), word=searchterm, perpage=50, tag=searchtag)
-    print("Added bookmarks from page " + str(page))
-    page += 1
-except:
-  pickle.dump(bookmarks, searchfile, pickle.HIGHEST_PROTOCOL)
-  print("Created data file.")
-  searchfile.close()
+page = 0
+
+while (len(newbookmarks) != 0):
+  bookmarks = bookmarks + newbookmarks
+  print("Added bookmarks from page " + str(page) + ". total bookmarks: " + str(len(bookmarks)))
+  page += 1
+  try:
+    newbookmarks = Raindrop.search(api, page=page, tag=searchtag, collection=CollectionRef({"$id": 0}), word=searchterm, perpage=50)
+  except:
+    print("Search limit reached.")
+    break
+pickle.dump(bookmarks, searchfile, pickle.HIGHEST_PROTOCOL)
+print("Created data file.")
+searchfile.close()
