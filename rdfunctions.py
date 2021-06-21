@@ -28,18 +28,10 @@ def addBookmark(url: str, bookmarktags: list, createdtime=None, overwrite=False)
         if len(bookmarks) > 1:
             for i in range(len(bookmarks) - 1):
                 remove = Raindrop.remove(api, id=bookmarks[i + 1].id)
-        try:
-            updatedbookmark = Raindrop.update(api, id=bookmarks[0].id, tags=bookmarktags, collection=finalcollection, created=createdtime)
-        except:
-            api = API('e4588190-ab7d-43d3-b488-3716aac0272d')
-            updatedbookmark = Raindrop.update(api, id=bookmarks[0].id, tags=bookmarktags, collection=finalcollection, created=createdtime)
+        updatedbookmark = Raindrop.update(api, id=bookmarks[0].id, tags=bookmarktags, collection=finalcollection, created=createdtime)
         return "Existing Bookmark found. Bookmark updated."
     else:
-        try:
-            newbookmark = Raindrop.create(api, link=url, tags=bookmarktags, created=createdtime)
-        except:
-            api = API('e4588190-ab7d-43d3-b488-3716aac0272d')
-            newbookmark = Raindrop.create(api, link=url, tags=bookmarktags, created=createdtime)
+        newbookmark = Raindrop.create(api, link=url, tags=bookmarktags, created=createdtime)
         return "New bookmark created."
 
 # sleep for 1 second (for the sake of the 120 requests per minute limit)
