@@ -1,7 +1,8 @@
 from raindropio import *
+from rdsettings import *
 import sys, time, datetime
 from datetime import datetime
-api = API('e4588190-ab7d-43d3-b488-3716aac0272d')
+api = API(APIKey)
 
 def addBookmark(url: str, bookmarktags: list, createdtime=None, overwrite=False):
     if url == "about:blank":
@@ -13,7 +14,7 @@ def addBookmark(url: str, bookmarktags: list, createdtime=None, overwrite=False)
     try:
         bookmarks = Raindrop.search(api, page=0, collection=CollectionRef({"$id": 0}), word=url, perpage=sys.maxsize)
     except:
-        api = API('e4588190-ab7d-43d3-b488-3716aac0272d')
+        api = API(APIKey)
         bookmarks = Raindrop.search(api, page=0, collection=CollectionRef({"$id": 0}), word=url, perpage=sys.maxsize)
     # Make a list of duplicate links if they exist
     bookmarks = [bookmark for bookmark in bookmarks if bookmark.link == url or bookmark.link == "https://" + url or bookmark.link == "http://" + url]
