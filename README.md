@@ -9,7 +9,7 @@ First, create a copy of the repo:
 ## API Key
 An API key is required to use the scripts
 * On raindrop.io under Settings > Integrations > For Developers (at the bottom), click "Create new app" & Give it any name and click "I accept."
-* Click the new app, and copy into `APIKey` in `rdsettings.py` and click "Create test token" **This test token doesn't expire, it can be used permanently.**
+* Click the new app, and copy into `APIKey` in `rdsettings.py` and click "Create test token" (the python-raindropi.io package seems to only support test tokens.**
 
 ## Scripts
 * `rdsettings.py`, A file where you specify your API key, and a string array of tags.
