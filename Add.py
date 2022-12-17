@@ -8,39 +8,43 @@ parser.add_argument("-r", help="A flag so that if a new bookmarks are added with
 parser.add_argument("-s", help="Show all tags and the corresponding numbers when adding bookmarks", action="store_true")
 parser.add_argument("-st", help="Shows all the bookmark tags and quits immediately.", action="store_true")
 args = parser.parse_args()
-if (args.t or args.nt) and args.b is None: parser.error("-t and -nt requires -b.")
 if args.t and args.nt: parser.error("-t and -nt are mutually exclusive.")
+parser.exit_on_error=False
 
-def showTags(): [print(f"{str(tags.index(tag))}. {tag}") for tag in tags]
+print(f"{Fore.GREEN}Add bookmarks to your collection{clear()}")
+printOverwrite = lambda : print(f"{Fore.RED}Bookmark overwriting enabled.{clear()}")
+def showTags(): [print(f"{Fore.GREEN}{str(tags.index(tag))}. {tag}{clear()}") for tag in tags]
 if args.st: showTags(); quit()
+overwrite = args.r
+
+def parseBookmarkArgs(inputArgs, dataType=int):
+    print(dataType)
+    global overwrite; bArgs = None
+    try: bArgs = parser.parse_args(f"-t {inputArgs}".split() if dataType == int else f"-b {inputArgs}".split())
+    except:
+        try: bArgs = parser.parse_args(inputArgs.split())
+        except: return
+    print(bArgs)
+    if any([arg for arg in vars(bArgs) if vars(bArgs)[arg] and arg not in ["s", "r", "b", "t"]]) or (args.b and datatype == int) or (args.t and dataType != int): 
+        print("Only -s and -r are allowed in the URL and tag inputs."); return
+    if bArgs.s and not args.s: showTags()
+    if bArgs.r: overwrite = not overwrite
+    if overwrite: printOverwrite()
+    if bArgs.s or bArgs.r: return
+    if bArgs.b or args.t:
+        if dataType == int: return bArgs.t
+        else: return bArgs.b
+    else: return
 
 while True:
     urls = []
     if args.b is not None: urls = args.b
     else:
-        text = input(f"{Fore.GREEN}Add bookmarks to your collection. Enter URLs and or arguments in: {clear()}"); urls.append(text)
-        while text != "": text = input(); urls.append(text)
-        urls.pop()
-    printOverwrite = lambda : print(f"{Fore.RED}Bookmark overwriting enabled.{clear()}")
-    if args.s: showTags()
-    bookmarktags = []
-    overwrite = args.r
-    if args.t is None or not args.nt:
-        bookmarkArgparse = argparse.ArgumentParser("Bookmark specific arguments")
-        bookmarkArgparse.add_argument("-s", help="Show all numbers and their corresponding tags.", action="store_true")
-        bookmarkArgparse.add_argument("-r", help="Reverses the overwrite option for these specific bookmarks. If overwriting is enabled, they won't be for those bookmarks, and vice versa.", action="store_true")
-        bookmarkArgparse.add_argument("-t", type=int, nargs='+')
-        while True:
-            bookmarkArgs = input(f"{Fore.GREEN}Enter numbers and or arguments in: {clear()}") if args.t is None else " ".join(map(str, args.t))
-            bookmarkArgs = f"-t {bookmarkArgs}" if any(str(n) in bookmarkArgs for n in [n for n in range(10)]) else bookmarkArgs
-            try: bookmarkArgs = bookmarkArgparse.parse_args([bookmarkArgs])
-            except: continue
-            if bookmarkArgs.s and not args.s: showTags()
-            if bookmarkArgs.r: overwrite = not overwrite
-            if overwrite: printOverwrite()
-            if bookmarkArgs.s or bookmarkArgs.r: continue
-            args.t = bookmarkArgs.t; break
-        bookmarktags = list(set([tags[int(x)] for x in args.t]))
-    elif overwrite: printOverwrite()
-    for link in urls: addBookmark(url=link, bookmarktags=bookmarktags, overwrite=overwrite)
-    if args.b is not None: break
+        text = input(f"{Fore.GREEN}Enter URLs and or arguments in: {clear()}")
+        while text != "" or len(urls) == 0: 
+            arg = parseBookmarkArgs(text, str)
+            if (arg): urls.extend(arg)
+            print("arg" + str(arg))
+            print(urls)
+            text = input()
+    print(urls)
