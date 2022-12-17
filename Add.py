@@ -7,7 +7,7 @@ parser.add_argument("-nt", help="Include no tags when adding bookmarks with -b. 
 parser.add_argument("-r", help="A flag so that if a new bookmarks are added with the same URL as exisiting bookmark(s), the existing ones would be deleted.", action="store_true")
 parser.add_argument("-up", help="Use the URLs or tags previous used in the script session. Works inside the script only.", action="store_true")
 parser.add_argument("-p", help="Show the previous tags or numbers in the script depending on where you enter it. Works inside the script only.", action="store_true")
-parser.add_argument("-c", help="Show the current tags or numbers in the script depending on where you enter it. Works inside the script only.", action="store_true")
+parser.add_argument("-c", help="Show the current tags. Works inside the script's bookmark dialogue only.", action="store_true")
 parser.add_argument("-s", help="Show all tags and the corresponding numbers when adding bookmarks", action="store_true")
 parser.add_argument("-st", help="Shows all the bookmark tags and quits immediately.", action="store_true")
 args = parser.parse_args()
@@ -15,9 +15,10 @@ if args.t and args.nt: parser.error("-t and -nt are mutually exclusive.")
 parser.exit_on_error=False
 
 printOverwrite = lambda : print(f"{Fore.RED}Bookmark overwriting {'enabled' if overwrite else f'{Fore.GREEN}disabled'}{clear()}.")
+bookmarktags = lambda tagNums: list(set([tags[int(x)] for x in tagNums]))
 def showTags(): [print(f"{Fore.GREEN}{str(tags.index(tag))}. {tag}{clear()}") for tag in tags]
 if args.st: showTags(); quit()
-overwrite = args.r
+bArgs, overwrite = None, args.r
 
 values = {
     "PreviousURLs": [],
@@ -27,68 +28,57 @@ values = {
 }
 
 def getInput(num=True):
-        text = input(f"{Fore.GREEN}Enter {'URLs' if num else 'numbers'} and or arguments in: {clear()}")
-        while text != "" or len(urls) == 0:
-            if (arg := parseBookmarkArgs(text, num)): values[argType := "URLs" if ]urls.extend(arg)
-            text = input()
+    global values
+    text = input(f"{Fore.GREEN}Enter {'numbers' if num else 'URLs'} and or arguments in: {clear()}")
+    while text != "" or len(values['Tags' if num else 'URLs']) == 0:
+        if text == "" and num: break
+        if (arg := parseBookmarkArgs(text, num)):
+            values['Tags' if num else 'URLs'].extend(arg)
+            if num and not bArgs.up: break
+        text = input()
 
 def parseBookmarkArgs(inputArgs, num=True):
-    print(num)
-    global overwrite; bArgs = None
-    try: bArgs = parser.parse_args(f"-t {inputArgs}".split() if num else f"-b {inputArgs}".split())
+    global overwrite, values, bArgs
+    try: bArgs = parser.parse_args(f"{'-t' if num else f'-b'} {inputArgs}".split())
     except:
         try: bArgs = parser.parse_args(inputArgs.split())
         except: return
-    print(bArgs)
-    if any([arg for arg in vars(bArgs) if vars(bArgs)[arg] and arg not in ["s", "r", "b", "t"]]) or (bArgs.b and num) or (bArgs.t and not num):
-        print("Only -s and -r are allowed in the URL and tag inputs."); return
+    if any([arg for arg in vars(bArgs) if vars(bArgs)[arg] and arg not in ["c", "p", "up", "s", "r", "b", "t"]]) or (bArgs.b and num) or (bArgs.t and not num):
+        print("Only the following arguments are allowed in the URL and tag inputs: -s -r -c -p -up."); return
+    argValues = bArgs.t if num else bArgs.b
+    def printArgs(previous=False, addPrevious=False):
+        nonlocal argValues
+        key = 'Tags' if num else 'URLs'
+        previousValue = "Previous" if previous else ""
+        if len(values[f"{previousValue if previous else ''}{key}"]) == 0:
+            print(f"{Fore.RED}There are no {f'previous' if previous else 'current'} {key}.{clear()}"); return 
+        urlLength = len(values[f'{previousValue}URLs'])
+        print(f"{Fore.GREEN}{'Added ' if addPrevious else ''}{'Previous' if previous else 'Current'} {key}:{clear()} {values[f'{previousValue}Tags'] if num else ''}{values[f'{previousValue}URLs'] if urlLength == 1 and not num else ''}")
+        if urlLength > 1: [print(URL) for URL in values[f"{previousValue}URLs"]]
+        if addPrevious:
+            if argValues is None: argValues = values[f"Previous{key}"]
+            else: argsValues.extend(values[f"Previous{key}"])
+    if bArgs.c:
+        if num: print(f"{Fore.RED}-c is for bookmarks only.{clear()}")
+        else: printArgs()
+    if bArgs.p: printArgs(True)
+    if bArgs.up: printArgs(True, True)
     if bArgs.s and not args.s: showTags()
     if bArgs.r: overwrite = not overwrite
     if overwrite: printOverwrite()
-    printArgs(previous=False, addPrevious=False)
-    if bArgs.c:
-        print(f"{Fore.GREEN}Current {'tags' if num else 'URLs'}:{clear()}")
-        if num: print(values["Tags"])
-        else: [print(URL) for URL in values["URLs"]]
-    if bArgs.p:
-        print(f"{Fore.GREEN}Previous {'tags' if num else 'URLs'}:{clear()}")
-        if num: print(values["PreviousTags"])
-        else: [print(URL) for URL in values["PreviousURLs"]]
-    argValues = list(bArgs.t if num else bArgs.b)
-    if bArgs.up:
-        print(f"{Fore.GREEN}Added previous {'tags' if num else 'URLs'}.{clear()}")
-        if num: print(values["PreviousTags"])
-        else: [print(URL) for URL in values["PreviousURLs"]]
-    if bArgs.b or bargs.t:
-        if num: return bArgs.t
-        else: return bArgs.b
-    else: return
+    return argValues
 
 while True:
-    urls = []
+    if not args.b or not args.t: print(f"{Fore.GREEN}Add bookmarks to your collection{clear()}")
     if args.b is not None: urls = args.b
-    else:
-      print(f"{Fore.GREEN}Add bookmarks to your collection{clear()}")
-
+    else: getInput(False)
     if args.s: showTags()
-    bookmarktags = []
     overwrite = args.r
     if not args.nt:
-        if args.t: bookmarktags = args.t
-        else:
-            text = input(f"{Fore.GREEN}Enter numbers and or arguments in: {clear()}")
-            while text != "":
-                if (arg := parseBookmarkArgs(text, str)): urls.extend(arg)
-
-        bookmarktags = list(set([tags[int(x)] for x in bookmarktags]))
-    else:
-        if args.nt: continue
-        
-        
-
-            bookmarkArgs = input(f"{Fore.GREEN}Enter numbers and or arguments in: {clear()}") if args.t is None else " ".join(map(str, args.t))
-        
-    else
-        overwrite: printOverwrite()
-    for link in urls: addBookmark(url=link, bookmarktags=bookmarktags, overwrite=overwrite)
+        if args.t: values["Tags"] = args.t
+        else: getInput(True)
+    elif overwrite: printOverwrite()
+    for link in values["URLs"]: addBookmark(url=link, bookmarktags=bookmarktags(values["Tags"]), overwrite=overwrite)
     if args.b is not None: break
+    values["PreviousURLs"], values["PreviousTags"] = values["URLs"], values["Tags"]
+    values["URLs"], values["Tags"] = [], []
