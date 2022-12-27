@@ -28,8 +28,9 @@ values = {
 }
 
 def getInput(num=True):
-    global values
-    text = input(f"{Fore.GREEN}Enter {'numbers' if num else 'URLs'} and or arguments in: {clear()}")
+    global values, overwrite
+    if num and overwrite: printOverwrite()
+    text = input(f"{Fore.GREEN}Enter {Fore.BLUE}{'numbers' if num else 'URLs'} {Fore.GREEN}and arguments in: {clear()}" + ('' if num else '\n'))
     while text != "" or len(values['Tags' if num else 'URLs']) == 0:
         if text == "" and num: break
         if (arg := parseBookmarkArgs(text, num)):
@@ -63,22 +64,21 @@ def parseBookmarkArgs(inputArgs, num=True):
         else: printArgs()
     if bArgs.p: printArgs(True)
     if bArgs.up: printArgs(True, True)
-    if bArgs.s and not args.s: showTags()
-    if bArgs.r: overwrite = not overwrite
-    if overwrite: printOverwrite()
+    if bArgs.s: showTags()
+    if bArgs.r: overwrite = not overwrite; printOverwrite()
     return argValues
 
+if not args.b: print(f"{Fore.GREEN}Add bookmarks to your collection. {clear()}", end="")
 while True:
-    if not args.b or not args.t: print(f"{Fore.GREEN}Add bookmarks to your collection{clear()}")
-    if args.b is not None: urls = args.b
+    if args.b: values["URLs"] = args.b
     else: getInput(False)
     if args.s: showTags()
     overwrite = args.r
     if not args.nt:
         if args.t: values["Tags"] = args.t
         else: getInput(True)
-    elif overwrite: printOverwrite()
-    for link in values["URLs"]: addBookmark(url=link, bookmarktags=bookmarktags(values["Tags"]), overwrite=overwrite)
-    if args.b is not None: break
+    if args.b and overwrite: printOverwrite()
+    addBookmarks(values["URLs"], bookmarktags(values["Tags"]), overwrite=overwrite)
+    if args.b: break
     values["PreviousURLs"], values["PreviousTags"] = values["URLs"], values["Tags"]
     values["URLs"], values["Tags"] = [], []
