@@ -1,0 +1,7 @@
+.DS_Store
+*.pkl
+*pycache*
+*.ipynb
+*.toml
+*test*
+!template.toml

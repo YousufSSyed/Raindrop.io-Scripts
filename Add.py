@@ -1,6 +1,7 @@
 from rdfunctions import *
 
 parser = argparse.ArgumentParser("A CLI Script to add raindrop.io bookmarks and specify tags from a list using numbers")
+parser.add_argument("-cp", help="relative or full file path to the TOML config file.")
 parser.add_argument('-b', help="Specify one bookmark, or multiple delimited by spaces, with or without quotes. The script quits after adding them.", nargs='+')
 parser.add_argument("-t", help="Numbers corresponding to tags to add to bookmarks specificed with -b. Requires -b.", type=int, nargs='+')
 parser.add_argument("-nt", help="Include no tags when adding bookmarks with -b. Requires -b", action="store_true")
@@ -8,15 +9,16 @@ parser.add_argument("-r", help="A flag so that if a new bookmarks are added with
 parser.add_argument("-up", help="Use the URLs or tags previous used in the script session. Works inside the script only.", action="store_true")
 parser.add_argument("-p", help="Show the previous tags or numbers in the script depending on where you enter it. Works inside the script only.", action="store_true")
 parser.add_argument("-c", help="Show the current tags. Works inside the script's bookmark dialogue only.", action="store_true")
-parser.add_argument("-s", help="Show all tags and the corresponding numbers when adding bookmarks", action="store_true")
+parser.add_argument("-s", help="Show all tags and the corresponding numbers when adding bookmarks in the script.", action="store_true")
 parser.add_argument("-st", help="Shows all the bookmark tags and quits immediately.", action="store_true")
 args = parser.parse_args()
+if args.cp: settings = tomllib.open(args.cp, "rb")
 if args.t and args.nt: parser.error("-t and -nt are mutually exclusive.")
 parser.exit_on_error=False
 
 printOverwrite = lambda : print(f"{Fore.RED}Bookmark overwriting {'enabled' if overwrite else f'{Fore.GREEN}disabled'}{clear()}.")
-bookmarktags = lambda tagNums: list(set([tags[int(x)] for x in tagNums]))
-def showTags(): [print(f"{Fore.GREEN}{str(tags.index(tag))}. {tag}{clear()}") for tag in tags]
+bookmarktags = lambda tagNums: list(set([settings["tags"][int(x)] for x in tagNums]))
+def showTags(): [print(f"{Fore.GREEN}{str(settings['tags'].index(tag))}. {tag}{clear()}") for tag in settings["tags"]]
 if args.st: showTags(); quit()
 bArgs, overwrite = None, args.r
 
@@ -30,7 +32,7 @@ values = {
 def getInput(num=True):
     global values, overwrite
     if num and overwrite: printOverwrite()
-    text = input(f"{Fore.GREEN}Enter {Fore.BLUE}{'numbers' if num else 'URLs'} {Fore.GREEN}and arguments in: {clear()}" + ('' if num else '\n'))
+    text = input(("\r" if num else "") + f"{Fore.GREEN}Enter {Fore.BLUE}{'numbers' if num else 'URLs'} {Fore.GREEN}and arguments in: {clear()}" + ('' if num else '\n'))
     while text != "" or len(values['Tags' if num else 'URLs']) == 0:
         if text == "" and num: break
         if (arg := parseBookmarkArgs(text, num)):
@@ -72,7 +74,6 @@ if not args.b: print(f"{Fore.GREEN}Add bookmarks to your collection. {clear()}",
 while True:
     if args.b: values["URLs"] = args.b
     else: getInput(False)
-    if args.s: showTags()
     overwrite = args.r
     if not args.nt:
         if args.t: values["Tags"] = args.t
