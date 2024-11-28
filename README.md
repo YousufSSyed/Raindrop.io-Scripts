@@ -1,4 +1,6 @@
-(The documentation is outdated, idk when I'll update it.)
+# This documentation is outdated and I'm no longer updating it nor my scripts
+
+
 # Raindrop.io-Scripts
 Python scripts to interact with the raindrop.io Bookmarking Service. They require python-raindropio, which can be installed like so:
 
